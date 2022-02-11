@@ -29,7 +29,12 @@ class PlainNodes(NodeStrategy):
     def __init__(self, network: Network, **kwargs):
         super().__init__(network, **kwargs)
 
-        self.weights: np.array = kwargs.get("weights", None)
+        weights = kwargs.get("weights", None)
+
+        if weights is not None and not type(weights) in (np.array, np.ndarray):
+            raise ValueError(f"weights must be np.array instead of {type(weights)}.")
+
+        self.weights: np.array = weights
         self.size: np.array = None
 
         self.node_categories = kwargs.pop("categories", None)
@@ -44,14 +49,18 @@ class PlainNodes(NodeStrategy):
         node_size = kwargs.pop("node_size", 10)
 
         if self.node_categories:
-            palette_name = kwargs.pop("palette", None)
+            palette_name = kwargs.pop("palette", "plasma")
             if isinstance(palette_name, str):
                 palette = sns.color_palette(
                     palette_name, n_colors=len(self.unique_categories)
                 )
-            else:
+            elif palette_name is not None:
                 # assume it's an iterable of colors
                 palette = list(palette_name)
+            else:
+                raise ValueError(
+                    "palette must be a valid name or an iterable of colors"
+                )
             color_map = dict(zip(self.unique_categories, palette))
             c = [color_map[c] for c in self.node_categories]
         else:
